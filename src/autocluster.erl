@@ -58,23 +58,23 @@ node_is_registered() ->
 %%--------------------------------------------------------------------
 -spec ensure_registered(atom()) -> ok | error.
 ensure_registered(aws) ->
-  autocluster_log:debug("Using AWS backend"),
+  autocluster_log:info("Using AWS backend"),
   ensure_registered(aws, autocluster_aws);
 
 ensure_registered(consul) ->
-  autocluster_log:debug("Using consul backend"),
+  autocluster_log:info("Using consul backend"),
   ensure_registered(consul, autocluster_consul);
 
 ensure_registered(dns) ->
-  autocluster_log:debug("Using DNS backend"),
+  autocluster_log:info("Using DNS backend"),
   ensure_registered(dns, autocluster_dns);
 
 ensure_registered(etcd) ->
-  autocluster_log:debug("Using etcd backend"),
+  autocluster_log:info("Using etcd backend"),
   ensure_registered(etcd, autocluster_etcd);
 
 ensure_registered(k8s) ->
-  autocluster_log:debug("Using k8s backend"),
+  autocluster_log:info("Using k8s backend"),
   ensure_registered(k8s, autocluster_k8s);
 
 ensure_registered(unconfigured) ->
@@ -151,7 +151,7 @@ maybe_register_non_member_node(false, Name, Module, Nodes) ->
                                   Nodes :: [node()])
     -> ok | error.
 process_registration_result(ok, Name, Nodes) ->
-  autocluster_log:debug("Registered node with ~p.", [Name]),
+  autocluster_log:info("Registered node with ~p.", [Name]),
   {ok, Nodes};
 process_registration_result({error, Reason}, Name, _) ->
   autocluster_log:error("Error registering node with ~p: ~p.",
@@ -170,7 +170,7 @@ process_registration_result({error, Reason}, Name, _) ->
 %%--------------------------------------------------------------------
 -spec cluster_node({ok, [node()]} | error) -> ok | error.
 cluster_node({ok, Nodes}) ->
-  autocluster_log:debug("Discovered ~p", [Nodes]),
+  autocluster_log:info("Discovered ~p", [Nodes]),
   ensure_clustered(Nodes).
 
 %%--------------------------------------------------------------------
@@ -198,7 +198,7 @@ ensure_clustered(Nodes) ->
 -spec maybe_join_cluster_nodes(RNodes :: [node()], DNodes :: sets:set(node()), DNodesCount :: non_neg_integer())
     -> ok | error.
 maybe_join_cluster_nodes(_, _, 0) ->
-  autocluster_log:debug("Node appears to be the first in the cluster."),
+  autocluster_log:info("Node appears to be the first in the cluster."),
   ok;
 maybe_join_cluster_nodes(Nodes, DNodes, _) when length(Nodes) == 1 ->
   maybe_join_discovery_nodes(sets:to_list(DNodes));
@@ -214,7 +214,7 @@ maybe_join_cluster_nodes(Nodes, _, _) ->
 %%--------------------------------------------------------------------
 -spec maybe_join_discovery_nodes([node()]) -> ok | error.
 maybe_join_discovery_nodes([]) ->
-  autocluster_log:debug("No other nodes are registed with the backend."),
+  autocluster_log:info("No other nodes are registed with the backend."),
   ok;
 
 maybe_join_discovery_nodes(Nodes) ->
@@ -231,7 +231,7 @@ maybe_join_discovery_nodes(Nodes) ->
 -spec maybe_join_existing_cluster(true | false, [node()])
     -> ok | error.
 maybe_join_existing_cluster(true, _) ->
-  autocluster_log:debug("Node is already in the cluster"),
+  autocluster_log:info("Node is already in the cluster"),
   ok;
 
 maybe_join_existing_cluster(false, Nodes) ->
@@ -263,7 +263,7 @@ join_cluster_nodes([]) ->
   startup_failure();
 
 join_cluster_nodes(Nodes) ->
-  autocluster_log:debug("Joining the cluster."),
+  autocluster_log:info("Joining the cluster."),
   _ = application:stop(rabbit),
   _ = mnesia:stop(),
   rabbit_mnesia:reset(),
@@ -282,10 +282,10 @@ join_cluster_nodes(Nodes) ->
 process_join_result({ok, already_member}) ->
   %% Before https://github.com/rabbitmq/rabbitmq-server/pull/868 it
   %% should be considered an error, but I'm not sure.
-  autocluster_log:debug("Was already joined."),
+  autocluster_log:info("Was already joined."),
   maybe_start(ok);
 process_join_result(ok) ->
-  autocluster_log:debug("Cluster joined."),
+  autocluster_log:info("Cluster joined."),
   maybe_start(ok);
 process_join_result({error, Reason}) ->
   autocluster_log:warning("Failed to join to cluster: ~p", [Reason]),
